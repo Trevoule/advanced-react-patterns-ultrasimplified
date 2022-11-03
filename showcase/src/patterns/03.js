@@ -162,8 +162,16 @@ const MediumClap = ({ children, onClap }) => {
   // every time when count changes it will invoke onClap
   useEffect(() => {
     // will not be invoked due to conditional
-    // but useEffect invokes every time when componentDidMount
-    onClap && onClap(clapState);
+    // but useEffect invokes every re-render
+    // so we could do additional check to make sure that component mounted after re-render
+    // for example after click
+    // with these check onClap will not be invoked before re-render (click)
+
+    if (!componentJustMounted.current) {
+      onClap && onClap(clapState);
+    }
+
+    componentJustMounted.current = false;
   }, [count]);
 
   const handleClapClick = () => {
@@ -266,7 +274,9 @@ const Usage = () => {
         <ClapCount />
         <CountTotal />
       </MediumClap>
-      <div className={styles.info}>{`You have clapped ${count} times!`}</div>
+      {!!count && (
+        <div className={styles.info}>{`You have clapped ${count} times!`}</div>
+      )}
     </div>
   );
 };
