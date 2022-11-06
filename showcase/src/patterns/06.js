@@ -2,7 +2,7 @@ import React, { useCallback, useLayoutEffect, useState } from "react";
 import mojs from "mo-js";
 import styles from "./index.css";
 
-const initialState = {
+const INITIAL_STATE = {
   count: 0,
   countTotal: 267,
   isClicked: false,
@@ -141,13 +141,47 @@ const useDOMRef = () => {
   return [DOMRef, setRef];
 };
 
-const MediumClap = () => {
+/**
+ *  useClapState
+ */
+
+const useClapState = (initialState = INITIAL_STATE) => {
   const MAXIMUM_USER_CLAP = 50;
   const [clapState, setClapState] = useState(initialState);
+  const { count } = clapState;
+
+  //   const handleClapClick = () => {
+  //     animationTimeLine.replay();
+  //     setClapState((prevState) => ({
+  //       isClicked: true,
+  //       count: Math.min(count + 1, MAXIMUM_USER_CLAP),
+  //       countTotal:
+  //         count < MAXIMUM_USER_CLAP
+  //           ? prevState.countTotal + 1
+  //           : prevState.countTotal,
+  //     }));
+
+  // as updater will be passed to different components
+  // we need useCallback so reference to the function remains the same
+  const updateClapState = useCallback(() => {
+    // prevState destructured
+    setClapState(({ count, countTotal }) => ({
+      isClicked: true,
+      count: Math.min(count + 1, MAXIMUM_USER_CLAP),
+      countTotal: count < MAXIMUM_USER_CLAP ? countTotal + 1 : countTotal,
+    }));
+  }, []);
+
+  return [clapState, updateClapState];
+};
+
+const MediumClap = () => {
+  // const [clapState, setClapState] = useState(initialState);
+  const [clapState, updateClapState] = useClapState();
   const { count, countTotal, isClicked } = clapState;
 
   //   const [{ clapRef, clapCountRef, clapTotalRef }, setRefState] = useState({});
-  const [{ clapRef, clapCountRef, clapTotalRef }, setRef] = useDOMRef({});
+  const [{ clapRef, clapCountRef, clapTotalRef }, setRef] = useDOMRef();
 
   // we need useCallback for action only when deps changing
   //   const setRef = useCallback((node) => {
@@ -168,15 +202,16 @@ const MediumClap = () => {
   });
 
   const handleClapClick = () => {
+    // setClapState((prevState) => ({
+    //   isClicked: true,
+    //   count: Math.min(count + 1, MAXIMUM_USER_CLAP),
+    //   countTotal:
+    //     count < MAXIMUM_USER_CLAP
+    //       ? prevState.countTotal + 1
+    //       : prevState.countTotal,
+    // }));
     animationTimeLine.replay();
-    setClapState((prevState) => ({
-      isClicked: true,
-      count: Math.min(count + 1, MAXIMUM_USER_CLAP),
-      countTotal:
-        count < MAXIMUM_USER_CLAP
-          ? prevState.countTotal + 1
-          : prevState.countTotal,
-    }));
+    updateClapState();
   };
 
   return (
