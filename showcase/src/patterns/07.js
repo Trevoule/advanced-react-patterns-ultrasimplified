@@ -147,11 +147,9 @@ const useDOMRef = () => {
 const useClapState = (initialState = INITIAL_STATE) => {
   const MAXIMUM_USER_CLAP = 50;
   const [clapState, setClapState] = useState(initialState);
+  const { count, countTotal } = clapState;
 
-  // as updater will be passed to different components
-  // we need useCallback so reference to the function remains the same
   const updateClapState = useCallback(() => {
-    // prevState destructured
     setClapState(({ count, countTotal }) => ({
       isClicked: true,
       count: Math.min(count + 1, MAXIMUM_USER_CLAP),
@@ -159,7 +157,18 @@ const useClapState = (initialState = INITIAL_STATE) => {
     }));
   }, []);
 
-  return [clapState, updateClapState];
+  // accessibility props
+  // props collection for 'click'
+  const togglerProps = {
+    onClick: updateClapState,
+  };
+
+  // props collection for 'count'
+  const counterProps = {
+    count,
+  };
+
+  return { clapState, updateClapState, togglerProps, counterProps };
 };
 
 /**
@@ -270,7 +279,8 @@ const CountTotal = ({ countTotal, setRef, ...restProps }) => {
 // - custom hooks
 // - UI components
 const Usage = () => {
-  const [clapState, updateClapState] = useClapState();
+  const { clapState, updateClapState, togglerProps, counterProps } =
+    useClapState();
   const { count, countTotal, isClicked } = clapState;
 
   const [{ clapRef, clapCountRef, clapTotalRef }, setRef] = useDOMRef();
@@ -288,11 +298,17 @@ const Usage = () => {
   return (
     <ClapContainer
       setRef={setRef}
-      onClick={updateClapState}
       data-refkey="clapRef"
+      //   onClick={updateClapState}
+      {...togglerProps}
     >
       <ClapIcon isClicked={isClicked} />
-      <ClapCount count={count} setRef={setRef} data-refkey="clapCountRef" />
+      <ClapCount
+        setRef={setRef}
+        data-refkey="clapCountRef"
+        // count={count}
+        {...counterProps}
+      />
       <CountTotal
         countTotal={countTotal}
         setRef={setRef}
