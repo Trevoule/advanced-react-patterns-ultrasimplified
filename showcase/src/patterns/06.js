@@ -1,4 +1,10 @@
-import React, { useCallback, useLayoutEffect, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import mojs from "mo-js";
 import styles from "./index.css";
 
@@ -175,6 +181,23 @@ const useClapState = (initialState = INITIAL_STATE) => {
   return [clapState, updateClapState];
 };
 
+/**
+ * useEffectAfterMount
+ */
+// instead of useEffect and handleClapClick
+
+const useEffectAfterMount = (cb, deps) => {
+  const componentJustMounted = useRef(true);
+
+  useEffect(() => {
+    if (!componentJustMounted.current) {
+      return cb();
+    }
+
+    componentJustMounted.current = false;
+  }, [...deps]);
+};
+
 const MediumClap = () => {
   // const [clapState, setClapState] = useState(initialState);
   const [clapState, updateClapState] = useClapState();
@@ -201,25 +224,29 @@ const MediumClap = () => {
     clapTotalEl: clapTotalRef,
   });
 
-  const handleClapClick = () => {
-    // setClapState((prevState) => ({
-    //   isClicked: true,
-    //   count: Math.min(count + 1, MAXIMUM_USER_CLAP),
-    //   countTotal:
-    //     count < MAXIMUM_USER_CLAP
-    //       ? prevState.countTotal + 1
-    //       : prevState.countTotal,
-    // }));
+  //   const handleClapClick = () => {
+  //     animationTimeLine.replay();
+  // setClapState((prevState) => ({
+  //   isClicked: true,
+  //   count: Math.min(count + 1, MAXIMUM_USER_CLAP),
+  //   countTotal:
+  //     count < MAXIMUM_USER_CLAP
+  //       ? prevState.countTotal + 1
+  //       : prevState.countTotal,
+  // }));
+  //   };
+
+  useEffectAfterMount(() => {
     animationTimeLine.replay();
-    updateClapState();
-  };
+  }, [count]);
 
   return (
     <button
       ref={setRef}
       data-refkey="clapRef"
       className={styles.clap}
-      onClick={handleClapClick}
+      //   onClick={handleClapClick}
+      onClick={updateClapState}
     >
       <ClapIcon isClicked={isClicked} />
       <ClapCount count={count} setRef={setRef} />
