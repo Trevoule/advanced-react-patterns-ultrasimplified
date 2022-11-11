@@ -2,6 +2,7 @@ import React, {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useReducer,
   useRef,
   useState,
 } from "react";
@@ -189,20 +190,41 @@ const callFnsInSequence =
 /*
  *  useClapState
  */
+const MAXIMUM_USER_CLAP = 50;
 
+// useReducer instead of useState
+// deconstruct of previous state
+// type deconstruct of action object
+const reducer = ({ count, countTotal }, { type, payload }) => {
+  switch (type) {
+    case "clap":
+      return {
+        isClicked: true,
+        count: Math.min(count + 1, MAXIMUM_USER_CLAP),
+        countTotal: count < MAXIMUM_USER_CLAP ? countTotal + 1 : countTotal,
+      };
+    case "reset":
+      return payload;
+  }
+};
 const useClapState = (initialState = INITIAL_STATE) => {
-  const MAXIMUM_USER_CLAP = 50;
   const userInitialState = useRef(initialState);
-  const [clapState, setClapState] = useState(initialState);
+
+  //   const [clapState, setClapState] = useState(initialState);
+  const [clapState, dispatch] = useReducer(reducer, initialState);
+
   const { count, countTotal } = clapState;
 
-  const updateClapState = useCallback(() => {
-    setClapState(({ count, countTotal }) => ({
-      isClicked: true,
-      count: Math.min(count + 1, MAXIMUM_USER_CLAP),
-      countTotal: count < MAXIMUM_USER_CLAP ? countTotal + 1 : countTotal,
-    }));
-  }, []);
+  // useCallback  not needed as its not passed to the user but invoked in callFnsInSequence
+  //   so it's reference does not change
+  const updateClapState = () => dispatch({ type: "clap" });
+  //   const updateClapState = useCallback(() => {
+  // setClapState(({ count, countTotal }) => ({
+  //   isClicked: true,
+  //   count: Math.min(count + 1, MAXIMUM_USER_CLAP),
+  //   countTotal: count < MAXIMUM_USER_CLAP ? countTotal + 1 : countTotal,
+  // }));
+  //   }, []);
 
   // glorified counter
   const resetRef = useRef(0); //0, 1, 2, 3, 4
@@ -215,10 +237,13 @@ const useClapState = (initialState = INITIAL_STATE) => {
     // but if nothing to reset dont do anything
     if (prevCount !== count) {
       // by using ref we don't need to provide dependency
-      setClapState(userInitialState.current);
+      //   setClapState(userInitialState.current);
+      dispatch({ type: "reset", payload: userInitialState.current });
+
       resetRef.current++;
     }
-  }, [prevCount, count, setClapState]);
+    //   }, [prevCount, count, setClapState]);
+  }, [prevCount, count]);
 
   // accessibility props
   // props collection for 'click'
