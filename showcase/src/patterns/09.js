@@ -145,12 +145,30 @@ const useDOMRef = () => {
  * hook for getting previous prop/state
  *
  */
+
+// value 0, 1
 const usePrevious = (value) => {
   const ref = useRef();
+
+  // React doesn’t execute the useEffect call, instead, the current value of the custom Hook is returned
+  // The useEffect Hook is invoked only after the component from which it is called has been rendered.
+  // Next, the execution within the component resumes. This time, the prevCount variable holds the value undefined
+  // To avoid blocking the browser from painting the DOM changes, the useEffect call within the usePrevious Hook is now invoked asynchronously.
+  // useEffect is invoked after the functional component renders
+  // The line within the useEffect function updates the current property of the ref object to value.
+  // value now represents what the custom Hook was initially called with.
+
+  // useEffect never called until the return statement of the func component is reached
+  // on value 1 nothing happens until the return statement of the function is executed
+  // then useEffect runs and we updated useEffect
+  // 1 is not returned anywhere until next invocation when value 2 it returns 1
+
+  // ref stores the value, useEffect is never called
+  // until return statment executed
   useEffect(() => {
-    ref.current = value;
+    ref.current = value; // 2
   });
-  return ref.current;
+  return ref.current; // undefined, 0, 1, 2
 };
 
 // const handleClick = (evt) => { ... }
